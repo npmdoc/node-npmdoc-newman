@@ -1,17 +1,40 @@
 {
-    "buildNpmdoc":"newman",
+    "author": "kai zhu <kaizhu256@gmail.com>",
+    "buildNpmdoc": "newman",
+    "description": "api documentation for [newman (v3.5.2)](https://github.com/postmanlabs/newman) [![npm package](https://img.shields.io/npm/v/npmdoc-newman.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-newman) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-newman.svg)](https://travis-ci.org/npmdoc/node-npmdoc-newman)",
     "devDependencies": {
-        "newman": "*",
         "electron-lite": "kaizhu256/node-electron-lite#alpha",
+        "newman": "*",
         "utility2": "kaizhu256/node-utility2#alpha"
     },
-    "name":"npmdoc-newman",
+    "engines": {
+        "node": ">=4.0"
+    },
+    "homepage": "https://github.com/npmdoc/node-npmdoc-newman",
+    "keywords": [
+        "documentation",
+        "newman"
+    ],
+    "license": "MIT",
+    "main": "lib.npmdoc_newman.js",
+    "name": "npmdoc-newman",
+    "nameAlias": "npmdoc_newman",
+    "nameOriginal": "npmdoc-newman",
+    "os": [
+        "darwin",
+        "linux"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/npmdoc/node-npmdoc-newman.git"
     },
     "scripts": {
-        "build-ci": "utility2 shReadmeTest build_ci.sh"
+        "build-ci": "utility2 shReadmeTest build_ci.sh",
+        "env": "env",
+        "heroku-postbuild": "(set -e; npm install \"kaizhu256/node-utility2#alpha\"; utility2 shDeployHeroku)",
+        "postinstall": "if [ -f npm_scripts.sh ]; then ./npm_scripts.sh postinstall; fi",
+        "start": "(set -e; export PORT=${PORT:-8080}; utility2 start test.js)",
+        "test": "(set -e; export PORT=$(utility2 shServerPortRandom); utility2 test test.js)"
     },
     "version": "0.0.1"
 }
