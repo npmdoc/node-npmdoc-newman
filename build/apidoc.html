@@ -1,0 +1,437 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/postmanlabs/newman"
+
+    >newman (v3.5.2)</a>
+</h1>
+<h4>Command-line companion utility for Postman</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.newman">module newman</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.run">
+            function <span class="apidocSignatureSpan">newman.</span>run
+            <span class="apidocSignatureSpan">(options, callback)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.version">
+            function <span class="apidocSignatureSpan">newman.</span>version
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">newman.</span>util</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.newman.util">module newman.util</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.util.fetch">
+            function <span class="apidocSignatureSpan">newman.util.</span>fetch
+            <span class="apidocSignatureSpan">(location, options, callback)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.util.fetchJson">
+            function <span class="apidocSignatureSpan">newman.util.</span>fetchJson
+            <span class="apidocSignatureSpan">(location, options, callback)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.util.filesize">
+            function <span class="apidocSignatureSpan">newman.util.</span>filesize
+            <span class="apidocSignatureSpan">(bytes)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.util.getFullName">
+            function <span class="apidocSignatureSpan">newman.util.</span>getFullName
+            <span class="apidocSignatureSpan">(item, separator)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.newman.util.prettyms">
+            function <span class="apidocSignatureSpan">newman.util.</span>prettyms
+            <span class="apidocSignatureSpan">(ms)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">newman.util.</span>userAgent</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">newman.util.</span>version</span>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.newman" id="apidoc.module.newman">module newman</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.newman.run" id="apidoc.element.newman.run">
+        function <span class="apidocSignatureSpan">newman.</span>run
+        <span class="apidocSignatureSpan">(options, callback)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">run = function (options, callback) {
+    // validate all options. it is to be noted that `options` parameter is option and is polymorphic
+    (!callback &#x26;&#x26; _.isFunction(options)) &#x26;&#x26; (
+        (callback = options),
+        (options = {})
+    );
+    !_.isFunction(callback) &#x26;&#x26; (callback = _.noop);
+
+    var emitter = new EventEmitter(), // @todo: create a new inherited constructor
+        runner = new runtime.Runner();
+
+    // get the configuration from various sources
+    getOptions(options, function (err, options) {
+        if (err) {
+            return callback(err);
+        }
+
+        // ensure that the collection option is present before starting a run
+        if (!_.isObject(options.collection)) {
+            return callback(new Error(&#x27;newman: expecting a collection to run&#x27;));
+        }
+
+        // store summary object and other relevant information inside the emitter
+        emitter.summary = new RunSummary(emitter, options);
+
+        // to store the exported content from reporters
+        emitter.exports = [];
+
+        // now start the run!
+        runner.run(options.collection, {
+            stopOnFailure: options.bail, // LOL, you just got trolled ¯\_(ツ)_/¯
+            abortOnFailure: options.abortOnFailure, // used in integration tests, to be considered for a future release
+            iterationCount: options.iterationCount,
+            environment: options.environment,
+            globals: options.globals,
+            entrypoint: options.folder,
+            data: options.iterationData,
+            delay: {
+                item: options.delayRequest
+            },
+            // todo: add support for more types of timeouts, currently only request is supported
+            timeout: options.timeoutRequest ? { request: options.timeoutRequest } : undefined,
+            fileResolver: fs,
+            requester: {
+                cookieJar: request.jar(),
+                followRedirects: _.has(options, &#x27;ignoreRedirects&#x27;) ? !options.ignoreRedirects : undefined,
+                strictSSL: _.has(options, &#x27;insecure&#x27;) ? !options.insecure : undefined
+            },
+            certificates: options.sslClientCert &#x26;&#x26; new sdk.CertificateList({}, [{
+                name: &#x27;client-cert&#x27;,
+                matches: [sdk.UrlMatchPattern.MATCH_ALL_URLS],
+                key: { src: options.sslClientKey },
+                cert: { src: options.sslClientCert },
+                passphrase: options.sslClientPassphrase
+            }])
+        }, function (err, run) {
+            var callbacks = {},
+                // ensure that the reporter option type polymorphism is handled
+                reporters = _.isString(options.reporters) ? [options.reporters] : options.reporters;
+
+            // emit events for all the callbacks triggered by the runtime
+            _.forEach(runtimeEvents, function (definition, eventName) {
+                // intercept each runtime.* callback and expose a global object based event
+                callbacks[eventName] = function (err, cursor) {
+                    var args = arguments,
+                        obj = { cursor: cursor };
+
+                    // convert the arguments into an object by taking the key name reference from the definition
+                    // object
+                    _.forEach(definition, function (key, index) {
+                        obj[key] = args[index + 2]; // first two are err, cursor
+                    });
+
+                    args = [eventName, err, obj];
+                    emitter.emit.apply(emitter, args); // eslint-disable-line prefer-spread
+                };
+            });
+
+            // add non generic callback handling
+            _.assignIn(callbacks, {
+
+<span class="apidocCodeCommentSpan">                /**
+                 * Bubbles up console messages.
+                 *
+                 * @param {Object} cursor - The run cursor instance.
+                 * @param {String} level - The level of console logging [error, silent, etc].
+                 * @returns {*}
+                 */
+</span>                console: function (cursor, level) {
+                    emitter.emit(&#x27;console&#x27;, null, { ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+Newman can be easily used within your JavaScript projects as a NodeJS module. The entire set of Newman CLI functionality is available
+ for programmatic use as well. The following example runs a collection by reading a JSON collection file stored on disk.
+
+```javascript
+var newman = require(&#x27;newman&#x27;); // require newman in your project
+
+// call newman.run to pass `options` object and wait for callback
+newman.<span class="apidocCodeKeywordSpan">run</span>({
+    collection: require(&#x27;./sample-collection.json&#x27;),
+    reporters: &#x27;cli&#x27;
+}, function (err) {
+	if (err) { throw err; }
+    console.log(&#x27;collection run complete!&#x27;);
+});
+```
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.newman.version" id="apidoc.element.newman.version">
+        function <span class="apidocSignatureSpan">newman.</span>version
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">version = function () {
+    console.info(version);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.newman.util" id="apidoc.module.newman.util">module newman.util</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.newman.util.fetch" id="apidoc.element.newman.util.fetch">
+        function <span class="apidocSignatureSpan">newman.util.</span>fetch
+        <span class="apidocSignatureSpan">(location, options, callback)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">fetch = function (location, options, callback) {
+    !callback &#x26;&#x26; _.isFunction(options) &#x26;&#x26; (callback = options, options = {});
+    return (/^https?:\/\/.*/).test(location) ?
+        // Load from URL
+        request.get({ url: location }, (err, response, body) =&#x3e; {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, body);
+        }) :
+        fs.readFile(location, function (err, value) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, value.toString());
+        });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.newman.util.fetchJson" id="apidoc.element.newman.util.fetchJson">
+        function <span class="apidocSignatureSpan">newman.util.</span>fetchJson
+        <span class="apidocSignatureSpan">(location, options, callback)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">fetchJson = function (location, options, callback) {
+    !callback &#x26;&#x26; _.isFunction(options) &#x26;&#x26; (callback = options, options = {});
+    return (/^https?:\/\/.*/).test(location) ?
+        // Load from URL
+        request.get({
+            url: location,
+            json: true,
+            headers: { &#x27;User-Agent&#x27;: USER_AGENT_VALUE }
+        }, (err, response, body) =&#x3e; {
+            if (err) {
+                return callback(_.set(err, &#x27;help&#x27;, `unable to fetch data from url &#x22;${location}&#x22;`));
+            }
+
+            try {
+                _.isString(body) &#x26;&#x26; (body = parseJson(body));
+            }
+            catch (e) {
+                return callback(_.set(e, &#x27;help&#x27;, `the url &#x22;${location}&#x22; did not provide valid JSON data`));
+            }
+
+            return callback(null, body);
+        }) :
+        fs.readFile(location, function (err, value) {
+            if (err) {
+                return callback(_.set(err, &#x27;help&#x27;, `unable to read data from file &#x22;${location}&#x22;`));
+            }
+
+            try {
+                value = parseJson(value.toString());
+            }
+            catch (e) {
+                return callback(_.set(e, &#x27;help&#x27;, `the file at ${location} does not contain valid JSON data`));
+            }
+
+            return callback(null, value);
+        });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.newman.util.filesize" id="apidoc.element.newman.util.filesize">
+        function <span class="apidocSignatureSpan">newman.util.</span>filesize
+        <span class="apidocSignatureSpan">(bytes)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">filesize = function (bytes) {
+    return filesize(bytes || 0, FILESIZE_OPTIONS);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.newman.util.getFullName" id="apidoc.element.newman.util.getFullName">
+        function <span class="apidocSignatureSpan">newman.util.</span>getFullName
+        <span class="apidocSignatureSpan">(item, separator)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">getFullName = function (item, separator) {
+    if (_.isEmpty(item) || !_.isFunction(item.parent) || !_.isFunction(item.forEachParent)) { return; }
+
+    var chain = [];
+    item.forEachParent(function (parent) { chain.unshift(parent.name || parent.id); });
+
+    item.parent() &#x26;&#x26; chain.push(item.name); // Add the current item only if it is not the collection instance
+    return chain.join(_.isString(separator) ? separator : SEP);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.newman.util.prettyms" id="apidoc.element.newman.util.prettyms">
+        function <span class="apidocSignatureSpan">newman.util.</span>prettyms
+        <span class="apidocSignatureSpan">(ms)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">prettyms = function (ms) {
+    return (ms &#x3c; 1998) ? `${parseInt(ms, 10)}ms` : prettyms(ms || 0);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
