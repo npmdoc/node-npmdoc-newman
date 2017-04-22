@@ -1,7 +1,12 @@
-# api documentation for  [newman (v3.5.2)](https://github.com/postmanlabs/newman)  [![npm package](https://img.shields.io/npm/v/npmdoc-newman.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-newman) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-newman.svg)](https://travis-ci.org/npmdoc/node-npmdoc-newman)
+# npmdoc-newman
+
+#### api documentation for  [newman (v3.5.2)](https://github.com/postmanlabs/newman)  [![npm package](https://img.shields.io/npm/v/npmdoc-newman.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-newman) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-newman.svg)](https://travis-ci.org/npmdoc/node-npmdoc-newman)
+
 #### Command-line companion utility for Postman
 
 [![NPM](https://nodei.co/npm/newman.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/newman)
+
+- [https://npmdoc.github.io/node-npmdoc-newman/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-newman/build/apidoc.html)
 
 [![apidoc](https://npmdoc.github.io/node-npmdoc-newman/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-newman/build/apidoc.html)
 
@@ -132,146 +137,6 @@
     },
     "version": "3.5.2"
 }
-```
-
-
-
-# <a name="apidoc.tableOfContents"></a>[table of contents](#apidoc.tableOfContents)
-
-#### [module newman](#apidoc.module.newman)
-1.  [function <span class="apidocSignatureSpan">newman.</span>run (options, callback)](#apidoc.element.newman.run)
-1.  [function <span class="apidocSignatureSpan">newman.</span>version ()](#apidoc.element.newman.version)
-
-
-
-# <a name="apidoc.module.newman"></a>[module newman](#apidoc.module.newman)
-
-#### <a name="apidoc.element.newman.run"></a>[function <span class="apidocSignatureSpan">newman.</span>run (options, callback)](#apidoc.element.newman.run)
-- description and source-code
-```javascript
-run = function (options, callback) {
-    // validate all options. it is to be noted that 'options' parameter is option and is polymorphic
-    (!callback && _.isFunction(options)) && (
-        (callback = options),
-        (options = {})
-    );
-    !_.isFunction(callback) && (callback = _.noop);
-
-    var emitter = new EventEmitter(), // @todo: create a new inherited constructor
-        runner = new runtime.Runner();
-
-    // get the configuration from various sources
-    getOptions(options, function (err, options) {
-        if (err) {
-            return callback(err);
-        }
-
-        // ensure that the collection option is present before starting a run
-        if (!_.isObject(options.collection)) {
-            return callback(new Error('newman: expecting a collection to run'));
-        }
-
-        // store summary object and other relevant information inside the emitter
-        emitter.summary = new RunSummary(emitter, options);
-
-        // to store the exported content from reporters
-        emitter.exports = [];
-
-        // now start the run!
-        runner.run(options.collection, {
-            stopOnFailure: options.bail, // LOL, you just got trolled ¯\_(ツ)_/¯
-            abortOnFailure: options.abortOnFailure, // used in integration tests, to be considered for a future release
-            iterationCount: options.iterationCount,
-            environment: options.environment,
-            globals: options.globals,
-            entrypoint: options.folder,
-            data: options.iterationData,
-            delay: {
-                item: options.delayRequest
-            },
-            // todo: add support for more types of timeouts, currently only request is supported
-            timeout: options.timeoutRequest ? { request: options.timeoutRequest } : undefined,
-            fileResolver: fs,
-            requester: {
-                cookieJar: request.jar(),
-                followRedirects: _.has(options, 'ignoreRedirects') ? !options.ignoreRedirects : undefined,
-                strictSSL: _.has(options, 'insecure') ? !options.insecure : undefined
-            },
-            certificates: options.sslClientCert && new sdk.CertificateList({}, [{
-                name: 'client-cert',
-                matches: [sdk.UrlMatchPattern.MATCH_ALL_URLS],
-                key: { src: options.sslClientKey },
-                cert: { src: options.sslClientCert },
-                passphrase: options.sslClientPassphrase
-            }])
-        }, function (err, run) {
-            var callbacks = {},
-                // ensure that the reporter option type polymorphism is handled
-                reporters = _.isString(options.reporters) ? [options.reporters] : options.reporters;
-
-            // emit events for all the callbacks triggered by the runtime
-            _.forEach(runtimeEvents, function (definition, eventName) {
-                // intercept each runtime.* callback and expose a global object based event
-                callbacks[eventName] = function (err, cursor) {
-                    var args = arguments,
-                        obj = { cursor: cursor };
-
-                    // convert the arguments into an object by taking the key name reference from the definition
-                    // object
-                    _.forEach(definition, function (key, index) {
-                        obj[key] = args[index + 2]; // first two are err, cursor
-                    });
-
-                    args = [eventName, err, obj];
-                    emitter.emit.apply(emitter, args); // eslint-disable-line prefer-spread
-                };
-            });
-
-            // add non generic callback handling
-            _.assignIn(callbacks, {
-
-<span class="apidocCodeCommentSpan">                /**
-                 * Bubbles up console messages.
-                 *
-                 * @param {Object} cursor - The run cursor instance.
-                 * @param {String} level - The level of console logging [error, silent, etc].
-                 * @returns {*}
-                 */
-</span>                console: function (cursor, level) {
-                    emitter.emit('console', null, { ...
-```
-- example usage
-```shell
-...
-
-Newman can be easily used within your JavaScript projects as a NodeJS module. The entire set of Newman CLI functionality is available
- for programmatic use as well. The following example runs a collection by reading a JSON collection file stored on disk.
-
-'''javascript
-var newman = require('newman'); // require newman in your project
-
-// call newman.run to pass 'options' object and wait for callback
-newman.run({
-    collection: require('./sample-collection.json'),
-    reporters: 'cli'
-}, function (err) {
-	if (err) { throw err; }
-    console.log('collection run complete!');
-});
-'''
-...
-```
-
-#### <a name="apidoc.element.newman.version"></a>[function <span class="apidocSignatureSpan">newman.</span>version ()](#apidoc.element.newman.version)
-- description and source-code
-```javascript
-version = function () {
-    console.info(version);
-}
-```
-- example usage
-```shell
-n/a
 ```
 
 
